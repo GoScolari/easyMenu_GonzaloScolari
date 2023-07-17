@@ -1,0 +1,505 @@
+1 archivo easymenu/setting.py
+
+import os
+import environ	
+
+env=environ.Env()
+environ.Env.read_env()
+
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
+#SECRET_KEY = 'rimt4wp5m+9yk_4ar!7tc^s)ay4lvf8j194dj&x*y5g(m&^iw4'
+SECRET_KEY=os.environ.get('SECRET_KEY')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+#DEBUG = True
+DEBUG=os.environ.get('DEBUG')
+
+ALLOWED_HOSTS = []
+
+
+# Application definition
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'easymenu',
+    'menu',
+]
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'easymenu.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'easymenu.wsgi.application'
+
+
+# Database
+# https://docs.djangoproject.com/en/2.2/ref/settings/#databases
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'djongo',
+        'NAME': 'easymenu',
+        'HOST': 'localhost',
+        'PORT': 27017,
+    }
+}
+
+# Password validation
+# https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+# Internationalization
+# https://docs.djangoproject.com/en/2.2/topics/i18n/
+
+LANGUAGE_CODE = 'en-us'
+
+TIME_ZONE = 'UTC'
+
+USE_I18N = True
+
+USE_L10N = True
+
+USE_TZ = True
+
+
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/2.2/howto/static-files/
+
+STATIC_URL = '/static/'
+
+2 archivo easymenu/urls.py
+
+from django.contrib import admin
+from django.urls import path, include
+from .views import HomeView
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', HomeView.as_view(),name="home"),
+    path('menu/', include('menu.urls', namespace='menu')),
+
+]
+
+
+3 archivo menu/views.py 
+
+from django.views import View
+from django.shortcuts import render
+
+class HomeView(View):
+	def get(self, request, *args, **kwargs):
+		context = {
+
+		}
+		return render(request, 'index.html', context)
+
+4 archivo menu/admin.py 
+
+from django.contrib import admin
+from .models import Post
+
+admin.site.register(Post)		
+def __str__(self):
+		return self.title
+
+
+5 archivo menu/apps.py
+
+from django.apps import AppConfig
+
+
+class MenuConfig(AppConfig):
+    name = 'menu'
+
+6 archivo menu/form.py
+
+from django import forms
+from .models import Post, Orden
+
+class PostCreateForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = ('title', 'content')
+
+class TotalInput(forms.TextInput):
+    def get_context(self, name, value, attrs):
+        if value is not None:
+            value = '$' + str(value)
+        return super().get_context(name, value, attrs)
+
+class OrdenForm(forms.ModelForm):
+    numeroOrden=forms.IntegerField(required=True, widget = forms.TextInput(attrs={'readonly':'readonly'}))
+    total = forms.DecimalField(widget=TotalInput)
+
+# class OrdenForm(forms.ModelForm):
+#     numeroOrden = forms.IntegerField(widget=forms.TextInput(attrs={'readonly': 'readonly'}))
+#     total = forms.DecimalField(widget=forms.TextInput(attrs={'prefix': '$'}))
+
+    class Meta:
+        model = Orden
+        fields = ['numeroOrden', 'mesa', 'mesero', 'codigoEstado', 'productos', 'notas', 'total']
+
+
+7 archivo menu/models.py
+
+from django.db import models
+
+class Post(models.Model):			
+    title = models.CharField(max_length=250)
+    content = models.TextField()
+
+    def __str__(self):
+        return self.title
+    
+class Producto(models.Model):
+     
+    numeroProducto = models.CharField(max_length=24, primary_key=True)
+    nombre = models.CharField(max_length=100)
+    precio = models.DecimalField(max_digits=8, decimal_places=2)
+    descripcion = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.nombre
+
+    class Meta:
+        db_table = 'productos'
+
+class Orden(models.Model):
+    numeroOrden = models.IntegerField(max_length=100,primary_key=True)
+    #fecha = models.DateField()
+    fecha = models.DateTimeField(auto_now_add=True)
+    mesa = models.IntegerField()
+    mesero = models.IntegerField()
+    codigoEstado = models.IntegerField()
+    productos = models.CharField(max_length=100)
+    notas = models.TextField(max_length=100)
+    total = models.IntegerField()
+
+    def __str__(self):
+        return self.numeroOrden
+    
+    class Meta:
+        db_table = 'orden'
+
+
+8 archivo menu/urls.py
+
+from django.urls import path
+from .views import crear_orden, ver_ordenes,ver_orden , actualizar_orden, borrar_orden
+from django import views
+
+app_name = 'menu'	
+			
+urlpatterns = [
+    path('crear/', crear_orden, name='crear_orden'),
+    path('ver/', ver_ordenes, name='ver_ordenes'),
+    path('ver/<int:numeroOrden>/', ver_orden, name='ver_orden'),
+    path('actualizar/<int:numeroOrden>/', actualizar_orden, name='actualizar_orden'),
+    path('borrar/<int:numeroOrden>/', borrar_orden, name='borrar_orden'),
+]
+
+9 archivo menu/views.py
+
+from django.shortcuts import render, redirect, get_object_or_404
+from .forms import PostCreateForm, OrdenForm
+from .models import Post, Orden
+from django.views.generic import View, UpdateView,DeleteView
+from django.urls import reverse_lazy
+import datetime
+from django.utils import timezone
+
+
+
+#----------------------------------------------------
+class HomeView(View):
+    def get(self, request, *args, **kwargs):
+        form = OrdenForm()
+        context = {
+            'form': form,
+            'ordenes': Orden.objects.all()
+        }
+        return render(request, 'ver_ordenes.html', context)
+
+    def post(self, request, *args, **kwargs):
+        form = OrdenForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('menu:ver_ordenes')
+        context = {
+            'form': form
+        }
+        return render(request, 'menu/crear_orden.html', context)
+    
+class OrdenUpdateView(UpdateView):
+    model = Orden
+    form_class = OrdenForm
+    template_name = 'menu/actualizar_orden.html'
+    success_url = reverse_lazy('menu:ver_ordenes')
+
+
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Orden, numeroOrden=self.kwargs['numeroOrden'])
+    
+
+
+
+def crear_orden(request):
+    if request.method == 'POST':
+        # Obtener los datos del formulario y crear una nueva orden
+        numeroOrden = request.POST['numeroOrden']
+        fecha = request.POST['fecha']
+        mesa = request.POST['mesa']
+        mesero = request.POST['mesero']
+        codigoEstado = request.POST['codigoEstado']
+        productos = request.POST['productos']
+        notas = request.POST['notas']
+        total = request.POST['total']
+        orden = Orden(numeroOrden=numeroOrden, fecha=fecha, mesa=mesa, mesero=mesero, codigoEstado=codigoEstado, productos=productos, notas=notas, total=total)
+        orden.save()
+        return redirect('menu:ver_ordenes')
+    return render(request, 'menu/crear_orden.html')
+
+def ver_ordenes(request):
+    ordenes = Orden.objects.all()
+    return render(request, 'menu/ver_ordenes.html', {'ordenes': ordenes})
+
+def ver_orden(request, numeroOrden):
+    orden = get_object_or_404(Orden, numeroOrden=numeroOrden)
+    return render(request, 'menu/ver_orden.html', {'orden': orden})
+
+from django.utils import timezone
+
+def actualizar_orden(request, numeroOrden):
+    # orden = Orden.objects.get(numeroOrden=numeroOrden)
+    orden = get_object_or_404(Orden, numeroOrden=numeroOrden)
+    form = OrdenForm(request.POST or None, instance=orden)
+    if request.method == 'POST':
+        if form.is_valid():
+            form.save()
+            return redirect('menu:ver_ordenes')
+    return render(request, 'menu/actualizar_orden.html',{'orden':orden, 'form': form})
+
+
+def borrar_orden(request, numeroOrden):
+    orden = get_object_or_404(Orden, numeroOrden=numeroOrden)
+    if request.method == 'POST':
+        orden.delete()
+        return redirect('menu:ver_ordenes')
+    return render(request, 'menu/borrar_orden.html', {'orden': orden})
+
+
+10 archivo templates/menu/actualizar_orden.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Actualizar Orden</title>
+</head>
+<body>
+    <h1>Actualizar Orden</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Actualizar Orden">
+      </form>
+</body>
+</html>
+
+11 archivo templates/menu/borrar_orden.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Borrar Orden</title>
+</head>
+<body>
+    <h1>Borrar Orden</h1>
+    <p>¿Estás seguro de que deseas borrar la siguiente orden?</p>
+    <p>Número de Orden: {{ orden.numeroOrden }}</p>
+    <p>Fecha: {{ orden.fecha }}</p>
+    <p>Número de Mesa: {{ orden.mesa }}</p>
+    <p>Código de Mesero: {{ orden.mesero }}</p>
+    <p>Productos: {{ orden.productos }}</p>
+    <p>Notas: {{ orden.notas }}</p>
+    <p>Total: {{ orden.total }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="orden_id" value="{{ orden.pk }}">
+        <input type="submit" value="Borrar Orden">
+    </form>
+</body>
+</html>
+
+12 archivo templates/menu/crear_orden.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crear Orden</title>
+</head>
+<body>
+    <h1>Crear Orden</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="numeroOrden">Número de Orden:</label>
+        <input type="text" name="numeroOrden" required><br><br>
+        <label for="fecha">Fecha:</label>
+        <input type="date" name="fecha" required><br><br>
+        <label for="mesa">Mesa:</label>
+        <input type="number" name="mesa" required><br><br>
+        <label for="mesero">Mesero:</label>
+        <input type="number" name="mesero" required><br><br>
+        <label for="codigoEstado">Estado:</label>
+        <input type="number" name="codigoEstado" required><br><br>
+        <label for="productos">Productos:</label>
+        <textarea name="productos" required></textarea><br><br>
+        <label for="notas">Notas:</label>
+        <textarea name="notas"></textarea><br><br>
+        <label for="total">Total:</label>
+        <input type="number" name="total" required><br><br>
+        <input type="submit" value="Crear Orden">
+    </form>
+</body>
+</html>
+
+13 archivo templates/menu/ver_orden.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ver Orden</title>
+</head>
+<body>
+    <h1>Detalles de la Orden</h1>
+    <br>
+    <p><strong>Número de Orden:</strong> {{ orden.numeroOrden }}</p>
+    <p><strong>Fecha:</strong> {{ orden.fecha }}</p>
+    <p><strong>Mesa:</strong> {{ orden.mesa }}</p>
+    <p><strong>Mesero:</strong> {{ orden.mesero }}</p>
+    <p><strong>Código de Estado:</strong> {{ orden.codigoEstado }}</p>
+    <p><strong>Productos:</strong></p>
+    <ul>
+      {% for producto in orden.productos %}
+        <li>{{ producto }}</li>
+      {% endfor %}
+    </ul>
+    <p><strong>Notas:</strong> {{ orden.notas }}</p>
+    <p><strong>Total:</strong> {{ orden.total }}</p>
+    <br>
+    <a href="{% url 'menu:ver_ordenes' %}">Volver a Órdenes</a>
+</body>
+</html>
+
+14 archivo templates/menu/ver_ordenes.html
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ver Órdenes</title>
+    <style>
+        table {
+            width: 50%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+        
+        th {
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Órdenes</h1>
+    <table>
+        <tr>
+            <th>Número</th>
+            <th>Fecha / Hora</th>
+            <th>Mesa</th>      
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+        {% for orden in ordenes %}
+        <tr>
+            <td>{{ orden.numeroOrden }}</td>
+            <td>{{ orden.fecha }}</td>
+            <td>{{ orden.hora }}</td>
+            <td>{{ orden.mesa }}</td>
+            <td>{{ orden.codigoEstado }}</td>
+            <td>
+                <a href="{% url 'menu:ver_orden' orden.numeroOrden %}">Ver</a>
+                <a href="{% url 'menu:actualizar_orden' orden.numeroOrden %}">Actualizar</a>
+                <a href="{% url 'menu:borrar_orden' orden.numeroOrden %}">Borrar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <a href="{% url 'menu:crear_orden' %}">Crear Nueva Orden</a>
+</body>
+</html>
+
+15 archivo requirements.text
+
+django==2.2
+django-environ==0.10.0
+djongo==1.3.6
+pymongo==3.12.0

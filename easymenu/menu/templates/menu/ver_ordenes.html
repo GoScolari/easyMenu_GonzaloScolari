@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ver Órdenes</title>
+</head>
+<body>
+    <h1>Órdenes</h1>
+    <table>
+        <tr>
+            <th>Número</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Mesa</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+        {% for orden in ordenes %}
+        <tr>
+            <td>{{ orden.numero }}</td>
+            <td>{{ orden.fecha }}</td>
+            <td>{{ orden.hora }}</td>
+            <td>{{ orden.mesa }}</td>
+            <td>{{ orden.estado }}</td>
+            <td>
+                <a href="{% url 'menu:ver_orden' orden.id %}">Ver</a> |
+                <a href="{% url 'menu:actualizar_orden' orden.id %}">Actualizar</a> |
+                <a href="{% url 'menu:borrar_orden' orden.id %}">Borrar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br>
+    <a href="{% url 'menu:crear_orden' %}">Crear Nueva Orden</a>
+</body>
+</html>

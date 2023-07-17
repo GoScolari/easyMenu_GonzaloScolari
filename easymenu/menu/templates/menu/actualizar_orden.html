@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Actualizar Orden</title>
+</head>
+<body>
+    <h1>Actualizar Orden</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="numero">Número:</label>
+        <input type="number" name="numero" value="{{ orden.numero }}" required><br><br>
+        <label for="fecha">Fecha:</label>
+        <input type="date" name="fecha" value="{{ orden.fecha }}" required><br><br>
+        <label for="hora">Hora:</label>
+        <input type="time" name="hora" value="{{ orden.hora }}" required><br><br>
+        <label for="mesa">Mesa:</label>
+        <input type="number" name="mesa" value="{{ orden.mesa }}" required><br><br>
+        <label for="estado">Estado:</label>
+        <input type="text" name="estado" value="{{ orden.estado }}" required><br><br>
+        <label for="productos">Productos:</label>
+        <textarea name="productos" required>{{ orden.productos }}</textarea><br><br>
+        <label for="notas">Notas:</label>
+        <textarea name="notas">{{ orden.notas }}</textarea><br><br>
+        <input type="submit" value="Actualizar Orden">
+    </form>
+</body>
+</html>

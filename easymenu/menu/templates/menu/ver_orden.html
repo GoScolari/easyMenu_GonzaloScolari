@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ver Orden</title>
+</head>
+<body>
+    <h1>Orden</h1>
+    <p><strong>Número:</strong> {{ orden.numero }}</p>
+    <p><strong>Fecha:</strong> {{ orden.fecha }}</p>
+    <p><strong>Hora:</strong> {{ orden.hora }}</p>
+    <p><strong>Mesa:</strong> {{ orden.mesa }}</p>
+    <p><strong>Estado:</strong> {{ orden.estado }}</p>
+    <p><strong>Productos:</strong></p>
+    <ul>
+        {% for producto in orden.productos %}
+        <li>{{ producto.categoria }} - {{ producto.nombre }} (Cantidad: {{ producto.cantidad }})</li>
+        {% endfor %}
+    </ul>
+    <p><strong>Notas:</strong> {{ orden.notas }}</p>
+    <br>
+    <a href="{% url 'menu:ver_ordenes' %}">Volver a Órdenes</a>
+</body>
+</html>
